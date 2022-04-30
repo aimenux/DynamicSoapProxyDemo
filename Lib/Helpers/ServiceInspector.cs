@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Web.Services.Description;
+using System.Web.Services.Protocols;
 using System.Xml.Serialization;
 using Microsoft.CSharp;
 
@@ -148,7 +149,10 @@ namespace Lib.Helpers
             MethodInfos = new List<MethodInfo>();
             foreach (var mInfo in _serviceType.GetMethods().Where(x => !x.Name.Equals(DiscoverName)))
             {
-                MethodInfos.Add(mInfo);
+                if (mInfo.GetCustomAttributes<SoapDocumentMethodAttribute>(true).Any())
+                {
+                    MethodInfos.Add(mInfo);
+                }
             }
         }
     }
