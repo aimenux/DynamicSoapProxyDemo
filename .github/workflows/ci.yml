@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: [windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1    
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+      - name: Setup VSTest
+        uses: darenm/Setup-VSTest@v1
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+      - name: Restore Packages
+        run: nuget restore DynamicSoapProxyDemo.sln
+      - name: Navigate to Workspace
+        run: cd $GITHUB_WORKSPACE
+      - name: Build DotNET
+        run: |
+         MSBuild.exe DynamicSoapProxyDemo.sln /p:platform="Any CPU" /p:configuration="Release"
+      - name: Run Tests
+        run: vstest.console.exe .\DynamicSoapProxyDemo.Tests\bin\Release\DynamicSoapProxyDemo.Tests.dll
