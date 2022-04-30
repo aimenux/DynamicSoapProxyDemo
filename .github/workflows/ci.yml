@@ -26,4 +26,4 @@ jobs:
         run: |
          MSBuild.exe DynamicSoapProxyDemo.sln /p:platform="Any CPU" /p:configuration="Release"
       - name: Run Tests
-        run: vstest.console.exe .\DynamicSoapProxyDemo.Tests\bin\Release\DynamicSoapProxyDemo.Tests.dll
+        run: vstest.console.exe .\DynamicSoapProxyDemo.Tests\bin\Release\Tests.dll
