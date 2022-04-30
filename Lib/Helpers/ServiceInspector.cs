@@ -8,9 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Web.Services.Description;
 using System.Web.Services.Protocols;
 using System.Xml.Serialization;
+using Lib.Models;
 using Microsoft.CSharp;
 
 namespace Lib.Helpers
@@ -35,10 +37,10 @@ namespace Lib.Helpers
             _mapper = mapper ?? new GenericMapper();
         }
 
-        public ServiceInspector(string uri, IGenericMapper mapper = null) : this(mapper)
+        public ServiceInspector(string uri, ServiceCredentials credentials = null) : this(new GenericMapper())
         {
             if (!IsValidUri(uri)) throw new ArgumentException($"Service Uri {uri} is not valid!");
-            if (!IsServiceUp(uri)) throw new ArgumentException($"Service {uri} is not responding!");
+            if (!IsServiceUp(uri, credentials)) throw new ArgumentException($"Service {uri} is not responding!");
             BuildServiceDescription();
             BuildServiceAssembly();
             FillServiceMethods();
@@ -91,11 +93,15 @@ namespace Lib.Helpers
             }
         }
 
-        private bool IsServiceUp(string uri)
+        private bool IsServiceUp(string uri, ServiceCredentials credentials)
         {
             try
             {
                 var request = WebRequest.Create(uri);
+                if (credentials != null)
+                {
+                    SetBasicAuthHeader(request, credentials);
+                }
                 _response = request.GetResponse().GetResponseStream();
                 return _response != null;
             }
@@ -110,6 +116,10 @@ namespace Lib.Helpers
         private void BuildServiceDescription()
         {
             var webService = ServiceDescription.Read(_response);
+            if (webService.Services.Count == 0)
+            {
+                throw new Exception("Service name is not found");
+            }
             _sdName = webService.Services[0].Name;
             var sdImport = new ServiceDescriptionImporter();
             sdImport.AddServiceDescription(webService, string.Empty, string.Empty);
@@ -154,6 +164,13 @@ namespace Lib.Helpers
                     MethodInfos.Add(mInfo);
                 }
             }
+        }
+
+        private static void SetBasicAuthHeader(WebRequest request, ServiceCredentials credentials)
+        {
+            var authInfo = credentials.Username + ":" + credentials.Password;
+            authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
+            request.Headers["Authorization"] = "Basic " + authInfo;
         }
     }
 }

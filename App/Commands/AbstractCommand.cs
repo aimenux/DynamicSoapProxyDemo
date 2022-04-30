@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using App.Helpers;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -35,5 +36,13 @@ namespace App.Commands
         protected virtual bool HasValidOptions() => true;
 
         protected virtual bool HasValidArguments() => true;
+
+        protected static string GetVersion(Type type)
+        {
+            return type
+                .Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+        }
     }
 }

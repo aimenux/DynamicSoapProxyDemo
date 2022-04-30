@@ -86,7 +86,6 @@
     <Compile Include="Commands\AbstractCommand.cs" />
     <Compile Include="Commands\InfosCommand.cs" />
     <Compile Include="Commands\MainCommand.cs" />
-    <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Helpers\ConsoleHelper.cs" />
     <Compile Include="Helpers\IConsoleHelper.cs" />
     <Compile Include="Program.cs" />

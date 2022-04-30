@@ -1,5 +1,4 @@
-﻿using App.Extensions;
-using App.Helpers;
+﻿using App.Helpers;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace App.Commands
@@ -20,6 +19,6 @@ namespace App.Commands
             app.ShowHelp();
         }
 
-        protected static string GetVersion() => typeof(MainCommand).GetVersion();
+        protected static string GetVersion() => GetVersion(typeof(MainCommand));
     }
 }

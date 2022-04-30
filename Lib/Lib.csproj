@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\ServiceCredentials.cs" />
     <Compile Include="Helpers\GenericMapper.cs" />
     <Compile Include="Helpers\IGenericMapper.cs" />
     <Compile Include="Helpers\IServiceInspector.cs" />
@@ -57,5 +58,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
