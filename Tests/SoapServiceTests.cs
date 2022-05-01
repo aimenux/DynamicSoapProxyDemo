@@ -1,18 +1,23 @@
 ﻿using FluentAssertions;
 using Lib.Helpers;
+using Lib.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
 {
     [TestClass]
-    public class ProxyTests
+    public class SoapServiceTests
     {
-        private static ServiceInspector _inspector;
+        private static SoapService _service;
 
         [ClassInitialize]
         public static void ClassInit(TestContext _)
         {
-            _inspector = new ServiceInspector(@"http://footballpool.dataaccess.eu/data/info.wso?wsdl");
+            var credentials = new SoapServiceCredentials(@"http://footballpool.dataaccess.eu/data/info.wso?wsdl");
+            var mapper = new GenericMapper();
+            var logger = NullLogger<SoapService>.Instance;
+            _service = new SoapService(credentials, mapper, logger);
         }
 
         [TestMethod]
@@ -20,8 +25,10 @@ namespace Tests
         {
             // arrange
             // act
+            var methods = _service.GetMethodInfos();
+
             // assert
-            _inspector.MethodInfos.Should().NotBeNullOrEmpty();
+            methods.Should().NotBeNullOrEmpty();
         }
 
         [DataTestMethod]
@@ -32,7 +39,7 @@ namespace Tests
         {
             // arrange
             // act
-            var result = _inspector.RunMethod(methodName);
+            var result = _service.RunMethod(methodName);
 
             // assert
             result.Should().NotBeNull();

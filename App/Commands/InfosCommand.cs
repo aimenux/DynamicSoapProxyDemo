@@ -1,9 +1,9 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using App.Helpers;
 using Lib.Helpers;
-using Lib.Models;
+using Lib.Services;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Logging;
 
 namespace App.Commands
 {
@@ -28,37 +28,21 @@ namespace App.Commands
 
         protected override void Execute(CommandLineApplication app)
         {
-            if (!Url.EndsWith("?wsdl", StringComparison.OrdinalIgnoreCase))
-            {
-                Url = $"{Url}?wsdl";
-            }
-
-            ServiceCredentials credentials = null;
-
-            if (AreValidCredentials())
-            {
-                credentials = new ServiceCredentials
-                {
-                    Username = Username,
-                    Password = Password
-                };
-            }
-
-            var inspector = new ServiceInspector(Url, credentials);
-            ConsoleHelper.RenderInfos(inspector.MethodInfos);
+            var credentials = new SoapServiceCredentials(Url, Username, Password);
+            var mapper = new GenericMapper();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<SoapService>();
+            var service = new SoapService(credentials, mapper, logger);
+            ConsoleHelper.RenderInfos(service.GetMethodInfos());
         }
 
         protected override bool HasValidOptions()
         {
-            return !string.IsNullOrWhiteSpace(Url)
-                   && Uri.TryCreate(Url, UriKind.Absolute, out var _)
-                   && AreValidCredentials();
-        }
+            if (!SoapServiceCredentials.IsValidUrl(Url))
+            {
+                return false;
+            }
 
-        protected static string GetVersion() => GetVersion(typeof(InfosCommand));
-
-        private bool AreValidCredentials()
-        {
             if (string.IsNullOrWhiteSpace(Username))
             {
                 return string.IsNullOrWhiteSpace(Password);
@@ -71,5 +55,7 @@ namespace App.Commands
 
             return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
         }
+
+        protected static string GetVersion() => GetVersion(typeof(InfosCommand));
     }
 }
