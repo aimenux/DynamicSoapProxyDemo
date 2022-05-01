@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Spectre.Console;
 
@@ -24,7 +25,12 @@ namespace App.Helpers
 
             foreach (var method in methods)
             {
-                table.AddRow(method.Name);
+                var methodParameters = method
+                    .GetParameters()
+                    .Select(x => $"[gray][u]{x.ParameterType.Name}[/][/] {x.Name}")
+                    .ToArray();
+
+                table.AddRow($"{method.Name}({string.Join(" , ", methodParameters)})");
             }
 
             AnsiConsole.WriteLine();

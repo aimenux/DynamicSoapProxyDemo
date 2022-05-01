@@ -1,7 +1,5 @@
 ﻿using FluentAssertions;
-using Lib.Helpers;
 using Lib.Services;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Tests
@@ -9,23 +7,15 @@ namespace Tests
     [TestClass]
     public class SoapServiceTests
     {
-        private static SoapService _service;
-
-        [ClassInitialize]
-        public static void ClassInit(TestContext _)
-        {
-            var credentials = new SoapServiceCredentials(@"http://footballpool.dataaccess.eu/data/info.wso?wsdl");
-            var mapper = new GenericMapper();
-            var logger = NullLogger<SoapService>.Instance;
-            _service = new SoapService(credentials, mapper, logger);
-        }
-
         [TestMethod]
         public void ShouldInspectMethodsWithoutErrors()
         {
             // arrange
+            var credentials = new SoapServiceCredentials(@"http://footballpool.dataaccess.eu/data/info.wso?wsdl");
+            var service = SoapService.BuildSoapService(credentials);
+
             // act
-            var methods = _service.GetMethodInfos();
+            var methods = service.GetMethodInfos();
 
             // assert
             methods.Should().NotBeNullOrEmpty();
@@ -38,8 +28,11 @@ namespace Tests
         public void ShouldRunMethodsWithoutErrors(string methodName)
         {
             // arrange
+            var credentials = new SoapServiceCredentials(@"http://footballpool.dataaccess.eu/data/info.wso?wsdl");
+            var service = SoapService.BuildSoapService(credentials);
+
             // act
-            var result = _service.RunMethod(methodName);
+            var result = service.RunMethod(methodName);
 
             // assert
             result.Should().NotBeNull();

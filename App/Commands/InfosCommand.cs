@@ -1,9 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using App.Helpers;
-using Lib.Helpers;
 using Lib.Services;
 using McMaster.Extensions.CommandLineUtils;
-using Microsoft.Extensions.Logging;
 
 namespace App.Commands
 {
@@ -29,10 +27,7 @@ namespace App.Commands
         protected override void Execute(CommandLineApplication app)
         {
             var credentials = new SoapServiceCredentials(Url, Username, Password);
-            var mapper = new GenericMapper();
-            var loggerFactory = new LoggerFactory();
-            var logger = loggerFactory.CreateLogger<SoapService>();
-            var service = new SoapService(credentials, mapper, logger);
+            var service = SoapService.BuildSoapService(credentials);
             ConsoleHelper.RenderInfos(service.GetMethodInfos());
         }
 

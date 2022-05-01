@@ -51,5 +51,19 @@ namespace Tests
             person.FirstName.Should().Be((string)dic["FirstName"]);
             person.LastName.Should().Be((string)dic["LastName"]);
         }
+
+        private class Person
+        {
+            public int Id { get; set; }
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+        }
+
+        private class User
+        {
+            public int Id { get; set; }
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+        }
     }
 }

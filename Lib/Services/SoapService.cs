@@ -31,6 +31,14 @@ namespace Lib.Services
         private const string SystemXmlDll = @"System.Xml.dll";
         private const string WebServiceDll = @"System.Web.Services.dll";
 
+        public static ISoapService BuildSoapService(SoapServiceCredentials credentials)
+        {
+            var mapper = new GenericMapper();
+            var loggerFactory = new LoggerFactory();
+            var logger = loggerFactory.CreateLogger<SoapService>();
+            return new SoapService(credentials, mapper, logger);
+        }
+
         public SoapService(SoapServiceCredentials credentials, IGenericMapper mapper, ILogger<SoapService> logger)
         {
             _credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
