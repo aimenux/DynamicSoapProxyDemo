@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Web.Services.Description;
@@ -41,15 +42,10 @@ namespace Lib.Services
 
         public ICollection<MethodInfo> GetMethodInfos()
         {
-            var methodInfos = new List<MethodInfo>();
-            foreach (var mInfo in _serviceType.GetMethods().Where(x => !x.Name.Equals(DiscoverName)))
-            {
-                if (mInfo.GetCustomAttributes<SoapDocumentMethodAttribute>(true).Any())
-                {
-                    methodInfos.Add(mInfo);
-                }
-            }
-            return methodInfos;
+            return _serviceType.GetMethods()
+                .Where(x => !x.Name.Equals(DiscoverName))
+                .Where(mInfo => mInfo.GetCustomAttributes<SoapDocumentMethodAttribute>(true).Any())
+                .ToList();
         }
 
         public object RunMethod(string methodName, params object[] passedParams)
@@ -58,7 +54,7 @@ namespace Lib.Services
             var method = methodInfos?.SingleOrDefault(x => x.Name.Equals(methodName, StringComparison.InvariantCultureIgnoreCase));
             if (method is null)
             {
-                throw new Exception($"Method {methodName} does not exist!");
+                throw new Exception($"Method '{methodName}' does not exist!");
             }
 
             var methodParams = method.GetParameters().ToArray();
@@ -69,7 +65,7 @@ namespace Lib.Services
 
             if (passedParams.Length != methodParams.Length)
             {
-                throw new ArgumentException($"No method {methodName} with {passedParams.Length} parameters!");
+                throw new Exception($"No method '{methodName}' with '{passedParams.Length}' parameters!");
             }
 
             var index = 0;
@@ -81,24 +77,32 @@ namespace Lib.Services
         private ServiceDescription BuildServiceDescription()
         {
             var url = _credentials.Url;
+
             if (!SoapServiceCredentials.IsValidUrl(url))
             {
-                throw new Exception($"Url {url} is not valid");
+                throw new Exception($"Url '{url}' is not valid");
             }
 
-            var request = WebRequest.Create(url);
-            SetBasicAuthorization(request, _credentials);
-            using (var response = request.GetResponse().GetResponseStream())
+            var httpClient = HttpClientFactory.Create();
+
+            if (!string.IsNullOrWhiteSpace(_credentials.Username) && !string.IsNullOrWhiteSpace(_credentials.Password))
+            {
+                var authInfo = $"{_credentials.Username}:{_credentials.Password}";
+                authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authInfo);
+            }
+
+            using (var response = httpClient.GetStreamAsync(url).GetAwaiter().GetResult())
             {
                 if (response is null)
                 {
-                    throw new Exception($"Failed to read url {url}");
+                    throw new Exception($"Failed to read url '{url}'");
                 }
 
                 var description = ServiceDescription.Read(response);
                 if (description.Services.Count == 0)
                 {
-                    throw new Exception("Service name is not found");
+                    throw new Exception($"Service name for url '{url}' is not found");
                 }
 
                 return description;
@@ -138,18 +142,6 @@ namespace Lib.Services
                 var assembly = results.CompiledAssembly;
                 return assembly.GetType(serviceName);
             }
-        }
-
-        private static void SetBasicAuthorization(WebRequest request, SoapServiceCredentials credentials)
-        {
-            if (string.IsNullOrWhiteSpace(credentials.Username) || string.IsNullOrWhiteSpace(credentials.Password))
-            {
-                return;
-            }
-
-            var authInfo = credentials.Username + ":" + credentials.Password;
-            authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
-            request.Headers["Authorization"] = "Basic " + authInfo;
         }
     }
 }
